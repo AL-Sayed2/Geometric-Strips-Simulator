@@ -1,223 +1,301 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl"> <!-- Set language to Arabic and direction to Right-to-Left -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Geometric Strips Simulator</title>
+    <title>محاكي الأشرطة الهندسية للأطفال</title> <!-- Translated Title -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+    <!-- Added Google Font 'Cairo' for Arabic -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* Custom styles */
+        /* Custom styles - Childish Theme & RTL adjustments */
         html, body {
             height: 100%;
-            overflow: hidden; /* Prevent body scroll */
+            overflow: hidden;
             margin: 0;
-            position: fixed; /* Prevent pull-to-refresh issues on mobile */
+            position: fixed;
             width: 100%;
         }
         body {
-            font-family: 'Inter', sans-serif;
-            overscroll-behavior: none; /* Prevent scroll chaining */
+            font-family: 'Cairo', sans-serif; /* Child-friendly Arabic font */
+            overscroll-behavior: none;
             display: flex;
-            flex-direction: column; /* Force vertical layout */
-            height: 100vh; /* Use viewport height */
+            flex-direction: column;
+            height: 100vh;
+            background-color: #f0f9ff; /* Light sky blue background */
         }
         .strip {
             touch-action: none;
             user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
             box-sizing: border-box;
             position: absolute;
-            border-radius: 9999px;
-            border: 1px solid rgba(0,0,0,0.2);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-radius: 15px; /* More rounded */
+            border: 2px dashed rgba(0,0,0,0.1); /* Fun dashed border */
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1); /* Softer shadow */
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: grab;
-            height: 26px; /* Increased height */
-            font-size: 10px;
-            color: rgba(0,0,0,0.6);
-            padding: 0 5px; /* Padding for text */
+            height: 30px; /* Slightly taller */
+            color: rgba(0,0,0,0.7);
+            padding: 0 8px; /* Padding for text */
+            font-weight: bold;
+        }
+        .strip-text {
+            font-size: 12px; /* Larger text */
+            pointer-events: none;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            line-height: 30px; /* Match height */
+            display: inline-block;
         }
         .strip-source {
-             position: relative;
-             margin: 5px; /* Spacing in palette */
-             transition: transform 0.1s ease-in-out;
-             flex-shrink: 0; /* Prevent shrinking in flex container */
+            position: relative;
+            margin: 8px; /* More spacing */
+            transition: transform 0.1s ease-in-out;
+            flex-shrink: 0;
         }
-         .strip-source:active {
-            transform: scale(1.05);
+        .strip-source:active {
+            transform: scale(1.1); /* Bigger pop */
             cursor: grabbing;
             z-index: 100;
-         }
-        /* Style for selected strip */
+        }
         .strip.selected {
-             outline: 3px solid #3b82f6;
-             outline-offset: 3px;
-             box-shadow: 0 4px 10px rgba(59, 130, 246, 0.5);
-             z-index: 15;
+            /* Fun selection outline */
+            outline: 4px dotted #fbbf24; /* Amber-400 dotted */
+            outline-offset: 4px;
+            box-shadow: 0 5px 15px rgba(251, 191, 36, 0.4); /* Amber shadow */
+            z-index: 15;
         }
         .handle {
             position: absolute;
-            width: 28px; /* Increased size */
-            height: 28px; /* Increased size */
-            background-color: rgba(255, 255, 255, 0.8);
-            border: 1px solid rgba(0, 0, 0, 0.4);
+            width: 32px; /* Larger handles */
+            height: 32px; /* Larger handles */
+            background-color: #fde68a; /* Light yellow */
+            border: 2px solid #facc15; /* Yellow */
             border-radius: 50%;
             cursor: pointer;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
             top: 50%;
             transform: translateY(-50%);
             z-index: 5;
+            /* Add a little smiley or icon inside */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #ca8a04; /* Darker yellow */
         }
-        /* Position handles overlapping ends */
-        .handle.start { left: -4px; }
-        .handle.end { right: -4px; }
+        /* Position handles overlapping ends - Adjusted for RTL */
+        .handle.start { right: -6px; left: auto; } /* Use right for start in RTL */
+        .handle.end { left: -6px; right: auto; }   /* Use left for end in RTL */
+        .handle.start::after { content: '◀️'; } /* Visual cue for start */
+        .handle.end::after { content: '▶️'; }   /* Visual cue for end */
 
         .snap-point {
             position: absolute;
-            width: 18px; /* Increased size */
-            height: 18px; /* Increased size */
+            width: 22px; /* Larger snap points */
+            height: 22px; /* Larger snap points */
             border-radius: 50%;
-            background-color: rgba(0, 0, 255, 0.6);
+            background-color: rgba(52, 211, 153, 0.7); /* Emerald green */
             pointer-events: none;
             display: none;
             z-index: 50;
-            border: 1px solid rgba(255,255,255,0.5);
-             /* Center snap point relative to handle */
-             top: 50%;
-             left: 50%;
-             transform: translate(-50%, -50%);
+            border: 2px solid rgba(255,255,255,0.7);
+            /* Sparkle effect could be added here if desired */
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
         }
-        /* Specific positioning for snap points relative to strip ends */
-         .snap-point[data-point="start"] {
-            /* Position centered at the very start edge of the strip */
-            left: 0;
-         }
-         .snap-point[data-point="end"] {
-             /* Position centered at the very end edge of the strip */
-             left: 100%;
-         }
+        /* Specific positioning for snap points relative to strip ends - Adjusted for RTL */
+        .snap-point[data-point="start"] { left: 100%; } /* Start point is on the right edge visually */
+        .snap-point[data-point="end"] { left: 0; }     /* End point is on the left edge visually */
 
         #strip-palette {
-            width: 100%; /* Full width */
-            height: auto; /* Adjust height based on content */
-            min-height: 60px; /* Minimum height */
-            max-height: 15vh; /* Limit height */
-            background-color: #e5e7eb; /* gray-200 */
-            padding: 8px;
-            display: flex; /* Use flexbox for horizontal layout */
-            align-items: center; /* Center items vertically */
-            flex-wrap: nowrap; /* Prevent wrapping by default */
-            overflow-x: auto; /* Allow horizontal scrolling */
+            width: 100%;
+            height: auto;
+            min-height: 70px; /* Taller palette */
+            background-color: #a5f3fc; /* Light cyan background */
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            flex-wrap: nowrap;
+            overflow-x: auto;
             overflow-y: hidden;
-            flex-shrink: 0; /* Prevent palette from shrinking */
-            border-bottom: 1px solid #ccc;
+            flex-shrink: 0;
+            border-bottom: 3px solid #67e8f9; /* Cyan border */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         #workspace {
             position: relative;
             width: 100%;
-            flex-grow: 1; /* Take remaining vertical space */
-            background-color: #f0f0f0;
-            border: none; /* Remove border */
+            flex-grow: 1;
+            background-color: #f0f9ff; /* Light sky blue */
+            border: none;
             overflow: hidden;
-            background-image: linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px);
-            background-size: 25px 25px; /* Slightly larger grid */
+            /* Fun background pattern - subtle stars */
+            background-image: radial-gradient(rgba(250, 204, 21, 0.2) 1px, transparent 1px);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px; /* Offset for less regularity */
         }
         .info-panel-container {
             position: absolute;
-            top: 10px;
-            right: 10px;
+            top: 15px;
+            left: 15px; /* Positioned to the left for RTL */
+            right: auto; /* Reset right */
             z-index: 30;
         }
         .info-panel {
-            background-color: rgba(255, 255, 255, 0.95);
-            border-radius: 8px;
-            padding: 8px 12px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-            max-width: 280px;
-            font-size: 13px; /* Slightly larger base font */
+            background-color: rgba(255, 255, 255, 0.98); /* More opaque */
+            border-radius: 12px; /* More rounded */
+            padding: 10px 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            max-width: 300px;
+            font-size: 14px; /* Slightly larger text */
+            border: 2px solid #a5f3fc; /* Light cyan border */
         }
-        /* Ensure interactjs elements are above others when dragging */
         .interact-target { z-index: 10; }
         .interact-dragging { z-index: 20; }
 
-        /* Hide default browser drag ghost image */
         canvas, img, svg, video, .strip {
-          -webkit-user-drag: none;
-          user-drag: none;
+            -webkit-user-drag: none;
+            user-drag: none;
         }
 
-        /* Control Button Styles */
+        /* Control Button Styles (Used in Action Buttons) - Fun Theme */
         .control-button {
-             background-color: #e5e7eb; /* gray-200 */
-             border: 1px solid #d1d5db; /* gray-300 */
-             padding: 8px 12px; /* Increased padding */
-             border-radius: 6px;
-             margin-left: 6px;
-             margin-top: 6px; /* Spacing */
-             cursor: pointer;
-             font-size: 14px; /* Match info panel font */
-             line-height: 1;
-             display: inline-flex; /* Align icon and text nicely */
-             align-items: center;
-             gap: 4px; /* Space between icon and text */
+            background-color: #fed7aa; /* Orange-200 */
+            border: 2px solid #fb923c; /* Orange-400 */
+            padding: 8px 10px; /* Bigger buttons */
+            border-radius: 10px; /* Rounder */
+            margin-right: 6px; /* Spacing for RTL */
+            margin-left: 0; /* Reset left margin */
+            cursor: pointer;
+            font-size: 18px; /* Bigger icons/text */
+            line-height: 1;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            color: #9a3412; /* Orange-800 */
+            font-weight: bold;
+            transition: transform 0.1s ease, background-color 0.1s ease;
         }
-        .control-button:hover { background-color: #d1d5db; }
-        .control-button:active { background-color: #9ca3af; }
+        .control-button:hover {
+            background-color: #fdba74; /* Orange-300 */
+            transform: translateY(-1px);
+        }
+        .control-button:active {
+            background-color: #fb923c; /* Orange-400 */
+            transform: translateY(1px);
+        }
         .delete-button {
-            background-color: #fee2e2; /* red-100 */
-            border-color: #fca5a5; /* red-300 */
-            color: #b91c1c; /* red-700 */
+            background-color: #fecaca; /* Red-200 */
+            border-color: #f87171; /* Red-400 */
+            color: #991b1b; /* Red-800 */
         }
-        .delete-button:hover { background-color: #fecaca; } /* red-200 */
-        .delete-button:active { background-color: #fca5a5; } /* red-300 */
+        .delete-button:hover { background-color: #fca5a5; } /* Red-300 */
+        .delete-button:active { background-color: #f87171; } /* Red-400 */
+
+        #strip-action-buttons {
+            position: absolute;
+            display: none;
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 8px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            z-index: 40;
+            touch-action: none;
+            white-space: nowrap;
+            border: 2px solid #fdba74; /* Orange-300 border */
+        }
+
+        body, .info-panel, .control-button, #strip-action-buttons {
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+        /* Style for angle/shape labels - Adjusted */
+        .angle-label, .shape-label {
+            position: absolute;
+            background-color: rgba(255, 255, 224, 0.9); /* Light yellow bg */
+            border: 1px solid rgba(200, 200, 0, 0.6);
+            border-radius: 6px;
+            padding: 3px 6px;
+            font-size: 12px;
+            font-weight: bold;
+            pointer-events: none;
+            z-index: 50;
+            color: #333;
+            transform: translate(-50%, -50%); /* Center on point */
+        }
+        .shape-label {
+            font-size: 14px;
+            padding: 4px 8px;
+            background-color: rgba(217, 249, 157, 0.9); /* Light green bg */
+             border: 1px solid rgba(132, 204, 22, 0.6); /* Lime border */
+        }
+
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 </head>
-<body class="bg-gray-100">
+<body class="bg-sky-100"> <!-- Updated body background class -->
 
     <!-- Palette moved to top -->
     <div id="strip-palette">
-        <!-- Strip sources: Add text labels for clarity -->
-        <div class="strip strip-source" data-length="100" style="width: 100px; background-color: #ef4444;">100</div>
-        <div class="strip strip-source" data-length="150" style="width: 150px; background-color: #3b82f6;">150</div>
-        <div class="strip strip-source" data-length="200" style="width: 200px; background-color: #22c55e;">200</div>
-        <div class="strip strip-source" data-length="120" style="width: 120px; background-color: #eab308;">120</div>
-        <div class="strip strip-source" data-length="180" style="width: 180px; background-color: #a855f7;">180</div>
-        <div class="strip strip-source" data-length="80" style="width: 80px; background-color: #64748b;">80</div> <!-- Example shorter strip -->
+        <!-- Strip sources: Brighter colors, keep numbers, maybe add "وحدة" (unit) -->
+        <div class="strip strip-source" data-length="100" style="width: 100px; background-color: #f87171;"><span class="strip-text">100</span></div> <!-- Red -->
+        <div class="strip strip-source" data-length="150" style="width: 150px; background-color: #60a5fa;"><span class="strip-text">150</span></div> <!-- Blue -->
+        <div class="strip strip-source" data-length="200" style="width: 200px; background-color: #4ade80;"><span class="strip-text">200</span></div> <!-- Green -->
+        <div class="strip strip-source" data-length="120" style="width: 120px; background-color: #facc15;"><span class="strip-text">120</span></div> <!-- Yellow -->
+        <div class="strip strip-source" data-length="180" style="width: 180px; background-color: #c084fc;"><span class="strip-text">180</span></div> <!-- Purple -->
+        <div class="strip strip-source" data-length="80" style="width: 80px; background-color: #fb923c;"><span class="strip-text">80</span></div>  <!-- Orange -->
     </div>
 
     <!-- Workspace takes remaining space -->
     <div id="workspace" class="flex-grow relative">
         <!-- Strips added here dynamically -->
 
-        <!-- Info Panel Container (position fixed relative to workspace) -->
+        <!-- Action buttons container -->
+        <div id="strip-action-buttons">
+            <!-- Using emojis for buttons -->
+            <button id="rotate-ccw" class="control-button" title="تدوير عكس عقارب الساعة (15 درجة)">↪️</button>
+            <button id="rotate-cw" class="control-button" title="تدوير مع عقارب الساعة (15 درجة)">↩️</button>
+            <button id="delete-selected" class="control-button delete-button" title="حذف الشريط المحدد">🗑️</button>
+        </div>
+
+        <!-- Info Panel Container (position adjusted for RTL) -->
         <div class="info-panel-container">
-             <div id="info-panel" class="info-panel">
-                 <p id="info-text">Drag strips from the top panel. Tap a strip to select it.</p>
-                 <!-- Controls for selected strip -->
-                 <div id="selection-controls" class="mt-2 hidden">
-                     <span class="font-semibold block mb-1">Selected: <span id="selected-strip-label"></span></span>
-                     <button id="rotate-ccw" class="control-button" title="Rotate Counter-Clockwise (15°)">↺ <span class="hidden sm:inline">CCW</span></button>
-                     <button id="rotate-cw" class="control-button" title="Rotate Clockwise (15°)"><span class="hidden sm:inline">CW</span> ↻</button>
-                     <button id="delete-selected" class="control-button delete-button" title="Delete Selected Strip">🗑️ <span class="hidden sm:inline">Delete</span></button>
-                     <p class="text-xs italic mt-1 text-gray-600">Note: Rotation disconnects ends.</p>
-                 </div>
-                 <p id="angle-info" class="mt-1 font-semibold"></p>
-                 <p id="shape-info" class="mt-1 font-semibold"></p>
-             </div>
+            <div id="info-panel" class="info-panel">
+                <!-- Translated text -->
+                <p id="info-text">اسحب الأشرطة من اللوحة العلوية. اضغط على شريط لاختياره.</p>
+                <div id="selection-info" class="mt-2 hidden">
+                    <span class="font-semibold block mb-1"><span id="selected-strip-label"></span> :<span class="font-bold">الشريط المحدد</span></span>
+                    <p class="text-xs italic text-gray-600">ملاحظة: التدوير يفصل الأطراف المتصلة.</p>
+                </div>
+                <p id="angle-info" class="mt-1 font-semibold"></p>
+                <p id="shape-info" class="mt-1 font-semibold"></p>
+            </div>
         </div>
     </div>
 
-
     <script>
         // --- Configuration ---
-        const SNAP_THRESHOLD = 25; // pixels (slightly larger tolerance)
-        const ANGLE_TOLERANCE = 6; // degrees
-        const LENGTH_TOLERANCE_RATIO = 0.05; // 5%
-        const PARALLEL_TOLERANCE = 6; // degrees
-        const ROTATION_INCREMENT = 15; // degrees
+        const SNAP_THRESHOLD = 30; // Slightly larger threshold for kids
+        const ANGLE_TOLERANCE = 8; // More tolerance
+        const LENGTH_TOLERANCE_RATIO = 0.06; // More tolerance
+        const PARALLEL_TOLERANCE = 8; // More tolerance
+        const ROTATION_INCREMENT = 15;
+        const ACTION_BUTTON_OFFSET_Y = -35; // Adjust offset for larger buttons/strips
 
         // --- Global State ---
         let stripsOnWorkspace = [];
@@ -231,15 +309,55 @@
         const infoText = document.getElementById('info-text');
         const angleInfo = document.getElementById('angle-info');
         const shapeInfo = document.getElementById('shape-info');
-        const selectionControls = document.getElementById('selection-controls');
+        const selectionInfo = document.getElementById('selection-info');
         const selectedStripLabel = document.getElementById('selected-strip-label');
+        const stripActionButtons = document.getElementById('strip-action-buttons');
         const rotateCWBtn = document.getElementById('rotate-cw');
         const rotateCCWBtn = document.getElementById('rotate-ccw');
         const deleteSelectedBtn = document.getElementById('delete-selected');
 
+        // --- Arabic Translations ---
+        const translations = {
+            dragStrips: "اسحب الأشرطة من اللوحة العلوية. اضغط على شريط لاختياره.",
+            tapToSelect: "اضغط على شريط لاختياره.",
+            tapWorkspaceToDeselect: "اضغط على مساحة العمل أو الشريط مرة أخرى لإلغاء التحديد.",
+            selectedPrefix: "الشريط المحدد: ",
+            lengthLabel: " (طول: ",
+            rotationNote: "ملاحظة: التدوير يفصل الأطراف المتصلة.",
+            rotatedInfo: "تم التدوير ",
+            degreesSuffix: " درجة. تم فصل الأطراف.",
+            draggingStrip: "جارٍ سحب الشريط...",
+            draggingEnd: "جارٍ سحب الطرف للتوصيل...",
+            anglesPrefix: "الزوايا المكتشفة: ",
+            shapesPrefix: "الأشكال المكتشفة: ",
+            noShapesOrAngles: "لا توجد أشكال أو زوايا.",
+            connected: "تم توصيل {id1}:{end1} بـ {id2}:{end2}", // Placeholders
+            disconnected: "تم فصل {id1}:{end1}", // Placeholder
+            removedStrip: "تمت إزالة الشريط {id}", // Placeholder
+            // Angle types
+            rightAngle: "قائمة",
+            acuteAngle: "حادة",
+            obtuseAngle: "منفرجة",
+            straightAngle: "مستقيمة",
+            // Shape names
+            triangle: "مثلث",
+            square: "مربع",
+            rectangle: "مستطيل",
+            rhombus: "معين",
+            quadrilateral: "شكل رباعي",
+            parallelogram: "متوازي أضلاع",
+            kite: "طائرة ورقية", // Or شكل دالتون
+            trapezoid: "شبه منحرف",
+            pentagon: "خماسي",
+            hexagon: "سداسي",
+            heptagon: "سباعي",
+            polygonSuffix: "-الأضلاع", // e.g., "8-الأضلاع"
+        };
+
+
         // --- Strip Class ---
         class Strip {
-             constructor(element, length, color, isSource = false) {
+            constructor(element, length, color, isSource = false) {
                 this.id = `strip-${stripCounter++}`;
                 this.element = element;
                 this.length = length;
@@ -256,13 +374,13 @@
                     this.element.style.transformOrigin = 'center center';
                     this.element.classList.remove('strip-source');
                     this.element.classList.add('interact-target');
-                    this.element.style.height = '26px'; // Match CSS
-                    // Add length label inside the strip itself
-                    this.element.textContent = this.length; // Display length
-                    this.element.style.lineHeight = '26px'; // Center text vertically
+                    this.element.style.height = '30px'; // Match CSS
+
+                    this.element.innerHTML = `<span class="strip-text">${this.length}</span>`;
+                    this.element.style.lineHeight = '30px';
                     this.element.style.textAlign = 'center';
 
-                    // Add handles and snap points AFTER setting text content
+                    // Add handles and snap points (HTML structure remains)
                     this.element.innerHTML += `
                         <div class="handle start" data-handle="start"></div>
                         <div class="handle end" data-handle="end"></div>
@@ -273,15 +391,13 @@
                         start: this.element.querySelector('.snap-point[data-point="start"]'),
                         end: this.element.querySelector('.snap-point[data-point="end"]')
                     };
-                    // Use interact's tap event for more reliable selection on touch
+
                     interact(this.element).on('tap', (event) => {
-                        if (event.type === 'tap') { // Ensure it's a tap event
-                           selectStrip(this);
-                           event.stopPropagation();
+                        if (event.type === 'tap') {
+                            selectStrip(this);
+                            event.stopPropagation();
                         }
                     });
-                     // Prevent interact default actions for pointerdown on strip body causing issues with selection
-                    // this.element.addEventListener('pointerdown', (e) => e.stopPropagation());
                 }
             }
 
@@ -290,44 +406,43 @@
                 const halfLen = this.length / 2;
                 const dx = halfLen * Math.cos(rad);
                 const dy = halfLen * Math.sin(rad);
+                // In RTL context, 'start' is visually right, 'end' is visually left for a 0-degree strip
+                // However, the math treats positive X as 'end' direction from center.
+                // Let's keep the math consistent: start = center - offset, end = center + offset
+                // The CSS handles visual placement of handles/snap points based on 'start'/'end' data attributes.
                 return {
                     start: { x: this.x - dx, y: this.y - dy },
                     end: { x: this.x + dx, y: this.y + dy }
                 };
             }
 
-            updateTransform() {
-                 if (this.isSource) return;
-                const halfHeight = this.element.offsetHeight / 2;
-                // Adjust left/top calculation based on transform-origin: center
-                const rad = this.rotation * Math.PI / 180;
-                const cosR = Math.cos(rad);
-                const sinR = Math.sin(rad);
+             updateTransform() {
+                if (this.isSource) return;
+                 // Adjust positioning based on center (no RTL change needed here)
                 const width = this.length;
                 const height = this.element.offsetHeight;
-
-                // Calculate the top-left corner relative to the center pivot point
-                // Simpler approach: position based on center, rotate around center
                 this.element.style.left = `${this.x - width / 2}px`;
                 this.element.style.top = `${this.y - height / 2}px`;
                 this.element.style.transform = `rotate(${this.rotation}deg)`;
             }
 
             updateSnapPoints() {
+                // Positioning logic for snap points relative to the strip element's local coords
                  if (this.isSource || !this.snapPoints || !this.snapPoints.start || !this.snapPoints.end) return;
-                // Snap points are positioned relative to the strip element's top-left (0,0)
-                const halfHeight = this.element.offsetHeight / 2;
-                const snapPointWidth = this.snapPoints.start.offsetWidth;
-                const snapPointHeight = this.snapPoints.start.offsetHeight;
+                 const halfHeight = this.element.offsetHeight / 2;
+                 const snapPointWidth = this.snapPoints.start.offsetWidth;
+                 const snapPointHeight = this.snapPoints.start.offsetHeight;
 
-                // Start point: Center vertically, place at the left edge (0)
-                this.snapPoints.start.style.left = `-${snapPointWidth / 2}px`; // Center horizontally on the edge
-                this.snapPoints.start.style.top = `${halfHeight - snapPointHeight / 2}px`;
+                 // These use 'left' property in CSS, but the data-point attribute links them logically.
+                 // CSS already handles visual placement for RTL via .snap-point[data-point="start/end"] rules.
+                 this.snapPoints.start.style.left = `${this.length - snapPointWidth / 2}px`; // Visually right end
+                 this.snapPoints.start.style.top = `${halfHeight - snapPointHeight / 2}px`;
 
-                 // End point: Center vertically, place at the right edge (this.length)
-                this.snapPoints.end.style.left = `${this.length - snapPointWidth / 2}px`; // Center horizontally on the edge
-                this.snapPoints.end.style.top = `${halfHeight - snapPointHeight / 2}px`;
+                 this.snapPoints.end.style.left = `-${snapPointWidth / 2}px`; // Visually left end
+                 this.snapPoints.end.style.top = `${halfHeight - snapPointHeight / 2}px`;
 
+
+                // Show/hide logic based on connections remains the same
                 this.snapPoints.start.style.display = this.connections.start ? 'none' : 'block';
                 this.snapPoints.end.style.display = this.connections.end ? 'none' : 'block';
             }
@@ -336,27 +451,33 @@
                 this.x = x;
                 this.y = y;
                 this.updateTransform();
-                // Update snap points after position change *and* potential transform
-                requestAnimationFrame(() => this.updateSnapPoints());
+                // Use rAF to ensure styles are applied before reading offsetWidth etc.
+                 requestAnimationFrame(() => this.updateSnapPoints());
+                if (selectedStripId === this.id) {
+                    updateActionButtonsPosition(this);
+                }
             }
 
             setRotation(degrees) {
                 this.rotation = degrees % 360;
                 if (this.rotation < 0) this.rotation += 360;
                 this.updateTransform();
-                // Update snap points after rotation change *and* potential transform
-                requestAnimationFrame(() => this.updateSnapPoints());
+                 requestAnimationFrame(() => this.updateSnapPoints());
+                if (selectedStripId === this.id) {
+                    updateActionButtonsPosition(this);
+                }
             }
 
-             // Connect/Disconnect methods remain the same as before
-             connect(myEndpointType, otherStrip, otherEndpointType, connectionPoint) {
+            connect(myEndpointType, otherStrip, otherEndpointType, connectionPoint) {
                 this.disconnect(myEndpointType);
                 otherStrip.disconnect(otherEndpointType);
                 this.connections[myEndpointType] = { stripId: otherStrip.id, end: otherEndpointType, point: { ...connectionPoint } };
                 otherStrip.connections[otherEndpointType] = { stripId: this.id, end: myEndpointType, point: { ...connectionPoint } };
                 this.updateSnapPoints();
                 otherStrip.updateSnapPoints();
-                console.log(`Connected ${this.id}:${myEndpointType} to ${otherStrip.id}:${otherEndpointType}`);
+                console.log(translations.connected
+                    .replace('{id1}', this.id).replace('{end1}', myEndpointType)
+                    .replace('{id2}', otherStrip.id).replace('{end2}', otherEndpointType));
                 checkForShapesAndAngles();
             }
 
@@ -364,28 +485,28 @@
                 const connection = this.connections[endpointType];
                 if (connection) {
                     const otherStrip = findStripById(connection.stripId);
+                    const myId = this.id; // Store before potential nulling
                     this.connections[endpointType] = null;
                     if (otherStrip) {
                         const otherEnd = connection.end;
-                        if(otherStrip.connections[otherEnd]?.stripId === this.id) {
-                             otherStrip.connections[otherEnd] = null;
-                             otherStrip.updateSnapPoints();
+                        if (otherStrip.connections[otherEnd]?.stripId === myId) {
+                            otherStrip.connections[otherEnd] = null;
+                            otherStrip.updateSnapPoints();
                         }
                     }
                     this.updateSnapPoints();
-                     console.log(`Disconnected ${this.id}:${endpointType}`);
+                     console.log(translations.disconnected.replace('{id1}', myId).replace('{end1}', endpointType));
                     checkForShapesAndAngles();
                 }
             }
-            getConnectionPoint(endpointType) { return this.connections[endpointType]?.point; }
-            getConnectedStrip(endpointType) { const conn = this.connections[endpointType]; return conn ? findStripById(conn.stripId) : null; }
+             getConnectionPoint(endpointType) { return this.connections[endpointType]?.point; }
+             getConnectedStrip(endpointType) { const conn = this.connections[endpointType]; return conn ? findStripById(conn.stripId) : null; }
         }
 
         // --- Utility Functions ---
         function findStripById(id) { return stripsOnWorkspace.find(s => s && s.id === id); }
         function getDistance(p1, p2) { return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2)); }
-        // calculateAngle, getAngleBetweenStrips remain the same as before
-        function calculateAngle(p1, p2, p3) {
+        function calculateAngle(p1, p2, p3) { // Geometry is direction-agnostic
             if (!p1 || !p2 || !p3) return 0;
             const v1 = { x: p2.x - p1.x, y: p2.y - p1.y };
             const v2 = { x: p3.x - p1.x, y: p3.y - p1.y };
@@ -393,10 +514,14 @@
             const det = v1.x * v2.y - v1.y * v2.x;
             const angleRad = Math.atan2(det, dot);
             let angleDeg = angleRad * 180 / Math.PI;
-            if (angleDeg < 0) angleDeg += 360;
+             // Ensure angle is interior (0-360, usually want 0-180 for simple polygons)
+             // Let's keep 0-360 for now, classification handles interpretation.
+             if (angleDeg < 0) angleDeg += 360;
+             // Option: force smaller angle if > 180? Maybe not needed.
+             // if (angleDeg > 180) angleDeg = 360 - angleDeg;
             return angleDeg;
-         }
-        function getAngleBetweenStrips(strip1, strip2) {
+        }
+        function getAngleBetweenStrips(strip1, strip2) { // Logic remains the same
             let connectionPoint = null, end1Type = null, end2Type = null;
             for (const et1 of ['start', 'end']) {
                 const conn = strip1.connections[et1];
@@ -414,17 +539,22 @@
         // --- Selection Logic ---
         function selectStrip(stripToSelect) {
             if (!stripToSelect || stripToSelect.isSource) return;
-             // If clicking the already selected strip, do nothing (or deselect optionally)
-            // if (selectedStripId === stripToSelect.id) return;
-
-            deselectStrip(); // Deselect previous
+            if (selectedStripId === stripToSelect.id) {
+                deselectStrip();
+                return;
+            }
+            deselectStrip();
 
             selectedStripId = stripToSelect.id;
             stripToSelect.element.classList.add('selected');
-            selectedStripLabel.textContent = stripToSelect.id + ` (L: ${stripToSelect.length})`;
-            selectionControls.classList.remove('hidden');
-            infoText.textContent = `Tap workspace to deselect. Drag ends to snap.`;
-             console.log(`Selected strip: ${selectedStripId}`);
+            // Translate selection label
+            selectedStripLabel.textContent = stripToSelect.id + translations.lengthLabel + stripToSelect.length + ")";
+            selectionInfo.classList.remove('hidden');
+            updateActionButtonsPosition(stripToSelect);
+            stripActionButtons.style.display = 'flex';
+
+            infoText.textContent = translations.tapWorkspaceToDeselect;
+            console.log(`Selected strip: ${selectedStripId}`);
         }
 
         function deselectStrip() {
@@ -433,22 +563,44 @@
                 if (previouslySelected && previouslySelected.element) {
                     previouslySelected.element.classList.remove('selected');
                 }
-                 console.log(`Deselected strip: ${selectedStripId}`);
+                console.log(`Deselected strip: ${selectedStripId}`);
             }
             selectedStripId = null;
-            selectionControls.classList.add('hidden');
-             updateDefaultInfoText(); // Use helper to set default text
+            selectionInfo.classList.add('hidden');
+            stripActionButtons.style.display = 'none';
+            updateDefaultInfoText();
+        }
+
+         // NEW: Function to position action buttons near the selected strip (RTL aware)
+        function updateActionButtonsPosition(strip) {
+            if (!strip || !stripActionButtons) return;
+
+            const buttonWidth = stripActionButtons.offsetWidth;
+            const buttonHeight = stripActionButtons.offsetHeight;
+            const stripHeight = strip.element.offsetHeight;
+
+            // Center horizontally relative to strip center
+            let newLeft = strip.x - buttonWidth / 2;
+            // Position vertically above the strip
+            let newTop = strip.y - stripHeight / 2 + ACTION_BUTTON_OFFSET_Y - buttonHeight;
+
+            const workspaceRect = workspace.getBoundingClientRect();
+            // Adjust bounds checking if necessary, ensure it stays within workspace view
+            newLeft = Math.max(5, Math.min(newLeft, workspaceRect.width - buttonWidth - 5));
+            newTop = Math.max(5, Math.min(newTop, workspaceRect.height - buttonHeight - 5));
+
+            stripActionButtons.style.left = `${newLeft}px`;
+            stripActionButtons.style.top = `${newTop}px`;
         }
 
         function updateDefaultInfoText() {
             const hasShapesOrAngles = angleInfo.textContent || shapeInfo.textContent;
             if (hasShapesOrAngles) {
-                infoText.textContent = 'Tap a strip to select it.';
+                infoText.textContent = translations.tapToSelect;
             } else {
-                infoText.textContent = 'Drag from top panel. Tap strip to select.';
+                infoText.textContent = translations.dragStrips;
             }
         }
-
 
         // --- Control Button Listeners ---
         rotateCWBtn.addEventListener('click', () => rotateSelectedStrip(ROTATION_INCREMENT));
@@ -462,42 +614,46 @@
             strip.disconnect('start');
             strip.disconnect('end');
             const newRotation = strip.rotation + angleDelta;
-            strip.setRotation(newRotation);
-            infoText.textContent = `Rotated strip ${strip.id}. Ends disconnected.`;
+            strip.setRotation(newRotation); // Updates position & buttons
+
+            const selectionText = selectionInfo.querySelector('.text-xs.italic');
+            if (selectionText) {
+                 // Translate rotation message
+                selectionText.textContent = translations.rotatedInfo + Math.abs(angleDelta) + translations.degreesSuffix;
+            }
+            setTimeout(() => {
+                if (selectionText && selectedStripId === strip.id) {
+                    selectionText.textContent = translations.rotationNote;
+                }
+            }, 2500); // Slightly longer timeout for kids
             checkForShapesAndAngles();
             strip.updateSnapPoints();
         }
 
         function deleteSelectedStrip() {
-             if (!selectedStripId) return;
+            if (!selectedStripId) return;
             const strip = findStripById(selectedStripId);
-             if (strip) {
-                // Store ID before deselecting
+            if (strip) {
                 const idToRemove = strip.id;
-                // Deselect first
                 deselectStrip();
-                // Remove connections
                 strip.disconnect('start');
                 strip.disconnect('end');
-                // Remove from workspace array
                 stripsOnWorkspace = stripsOnWorkspace.filter(s => s.id !== idToRemove);
-                // Remove element from DOM
                 strip.element.remove();
-                console.log(`Removed strip ${idToRemove}`);
+                console.log(translations.removedStrip.replace('{id}', idToRemove));
                 checkForShapesAndAngles();
-                updateDefaultInfoText(); // Update info text after removal
-                angleInfo.textContent = ''; // Clear specific info
-                shapeInfo.textContent = ''; // Clear specific info
-             }
+                updateDefaultInfoText();
+                angleInfo.textContent = '';
+                shapeInfo.textContent = '';
+            }
         }
-
 
         // --- Interaction Setup (Interact.js) ---
 
         // 1. Dragging strips from the palette
         interact('.strip-source')
             .draggable({
-                inertia: false, // Disable inertia for palette drags
+                inertia: false,
                 listeners: {
                     start(event) {
                         deselectStrip();
@@ -505,52 +661,55 @@
                         const length = parseInt(sourceElement.dataset.length);
                         const color = sourceElement.style.backgroundColor;
 
-                        const clonedElement = sourceElement.cloneNode(true); // Clone including content (length)
+                        const clonedElement = sourceElement.cloneNode(false);
+                        clonedElement.innerHTML = '';
                         clonedElement.classList.remove('strip-source');
                         clonedElement.style.position = 'absolute';
-                        clonedElement.style.left = '0px';
+                        clonedElement.style.left = '0px'; // Initial dummy position
                         clonedElement.style.top = '0px';
                         clonedElement.style.transform = '';
-                        clonedElement.style.visibility = 'hidden'; // Keep hidden initially
-                        clonedElement.style.width = `${length}px`; // Explicitly set width
+                        clonedElement.style.visibility = 'hidden';
+                        clonedElement.style.width = `${length}px`;
+                        clonedElement.style.height = '30px'; // Match theme
 
                         workspace.appendChild(clonedElement);
-
-                        // Adjust height to match standard strip height AFTER appending
-                        clonedElement.style.height = '26px';
 
                         const newStrip = new Strip(clonedElement, length, color);
 
                         const workspaceRect = workspace.getBoundingClientRect();
-                        // Map pointer coordinates to workspace's local coordinate system
-                        let startX = event.pageX - workspaceRect.left - window.scrollX;
+                         // Adjust for RTL scrollbars if any (usually on the left)
+                        let startX = event.pageX - workspaceRect.left - (document.documentElement.dir === 'rtl' ? 0 : window.scrollX);
                         let startY = event.pageY - workspaceRect.top - window.scrollY;
 
                         newStrip.x = startX;
                         newStrip.y = startY;
+                        newStrip.setPosition(startX, startY); // Set initial position visually
 
                         event.interaction.newStrip = newStrip;
                         activeDragTarget = newStrip.element;
-                        infoText.textContent = 'Dragging strip...';
+                        infoText.textContent = translations.draggingStrip;
                         angleInfo.textContent = '';
                         shapeInfo.textContent = '';
+
+                         // Make visible slightly after start to avoid flicker at source
+                         setTimeout(() => {
+                            if (event.interaction.newStrip && event.interaction.newStrip === newStrip) {
+                                clonedElement.style.visibility = 'visible';
+                            }
+                        }, 50);
+
                     },
                     move(event) {
                         const newStrip = event.interaction.newStrip;
                         if (newStrip) {
+                            // Ensure it's visible if not already
                             if (newStrip.element.style.visibility === 'hidden') {
                                 newStrip.element.style.visibility = 'visible';
-                                // Defer update until frame after visible to ensure dimensions are calculated
-                                requestAnimationFrame(() => {
-                                     newStrip.updateTransform();
-                                     newStrip.updateSnapPoints();
-                                });
                             }
                             newStrip.x += event.dx;
                             newStrip.y += event.dy;
-                            // Update visual position immediately
-                            newStrip.updateTransform();
-                             // Check for snapping during move
+                            // setPosition updates visuals and snap points
+                            newStrip.setPosition(newStrip.x, newStrip.y);
                             checkForSnapping(newStrip, event);
                         }
                     },
@@ -558,35 +717,35 @@
                         const newStrip = event.interaction.newStrip;
                         activeDragTarget = null;
                         if (newStrip) {
+                             // Ensure visibility one last time
                             if (newStrip.element.style.visibility === 'hidden') {
                                 newStrip.element.style.visibility = 'visible';
-                                // Ensure final updates if never moved
-                                requestAnimationFrame(() => {
-                                    newStrip.updateTransform();
-                                    newStrip.updateSnapPoints();
-                                });
+                                newStrip.setPosition(newStrip.x, newStrip.y); // Update final position
                             }
+
                             stripsOnWorkspace.push(newStrip);
                             const didSnap = checkForSnapping(newStrip, event, true); // Final snap check
-                            if (!didSnap) {
+                             if (!didSnap) {
+                                 // Ensure ends are disconnected if no snap occurred
                                 newStrip.disconnect('start'); newStrip.disconnect('end');
                             }
-                            // Ensure snap points updated after potential connect/disconnect
-                            requestAnimationFrame(() => {
-                                if (typeof newStrip.updateSnapPoints === 'function') {
-                                    newStrip.updateSnapPoints();
-                                }
-                            });
 
-                            checkForShapesAndAngles();
-                            event.interaction.newStrip = null;
-                            selectStrip(newStrip); // Select the newly added strip
+                            // Use rAF for final updates after potential DOM changes from snap
+                            requestAnimationFrame(() => {
+                                if (findStripById(newStrip.id)) { // Check if not deleted immediately
+                                    newStrip.updateSnapPoints();
+                                    checkForShapesAndAngles();
+                                }
+                             });
+                             event.interaction.newStrip = null;
+                             selectStrip(newStrip); // Select the new strip
                         } else {
-                             updateDefaultInfoText(); // Reset if no new strip
+                            updateDefaultInfoText(); // Restore default text if drag failed
                         }
                     }
                 }
             });
+
 
         // 2. Dragging strips/handles on the workspace
         interact('.interact-target')
@@ -602,32 +761,35 @@
                         const strip = findStripById(stripElement.id);
                         if (!strip) return;
 
-                        // If the strip wasn't selected, select it now
                         if (selectedStripId !== strip.id) {
                             selectStrip(strip);
                         }
-                        // Don't deselect if dragging the currently selected strip
 
                         activeDragTarget = stripElement;
                         stripElement.style.zIndex = 30;
 
-                        const handle = event.target.closest('.handle'); // Check if the drag started *on* a handle
+                        const handle = event.target.closest('.handle');
                         event.interaction.handleType = handle ? handle.dataset.handle : 'body';
                         event.interaction.interactingStrip = strip;
 
                         if (event.interaction.handleType !== 'body') {
                             const oppositeEndType = event.interaction.handleType === 'start' ? 'end' : 'start';
-                            // Define pivot based on the *other* end's current position
                             event.interaction.pivotPoint = strip.getEndpoints()[oppositeEndType];
-                            infoText.textContent = 'Dragging end to snap...';
-                            strip.disconnect(event.interaction.handleType); // Disconnect the dragged end
+                            infoText.textContent = translations.draggingEnd;
+                            strip.disconnect(event.interaction.handleType); // Disconnect the end being dragged
                         } else {
-                             infoText.textContent = 'Dragging strip...';
+                            infoText.textContent = translations.draggingStrip;
+                            // Disconnect both ends when dragging the body
                             strip.disconnect('start');
                             strip.disconnect('end');
                         }
-                         angleInfo.textContent = '';
-                         shapeInfo.textContent = '';
+                        angleInfo.textContent = ''; // Clear angle/shape info during drag
+                        shapeInfo.textContent = '';
+                        if (stripActionButtons.style.display !== 'flex') {
+                            stripActionButtons.style.display = 'flex'; // Ensure visible
+                        }
+                         // Hide labels during drag for clarity
+                        document.querySelectorAll('.angle-label, .shape-label').forEach(label => label.style.display = 'none');
                     },
                     move(event) {
                         const strip = event.interaction.interactingStrip;
@@ -637,158 +799,195 @@
                         if (handleType === 'body') {
                             strip.x += event.dx;
                             strip.y += event.dy;
-                            strip.updateTransform();
-                            strip.updateSnapPoints(); // Keep snap points potentially visible
-                            checkForSnapping(strip, event); // Check snap while dragging body
-                        } else {
-                            // Dragging an end (Rotation/Snap)
+                            strip.setPosition(strip.x, strip.y); // Updates transform, snap points, buttons
+                            // Check for snapping of *both* ends when body dragging
+                            checkForSnapping(strip, event);
+                        } else { // Dragging an end handle
                             const pivotPoint = event.interaction.pivotPoint;
                             if (!pivotPoint) return;
 
                             const workspaceRect = workspace.getBoundingClientRect();
-                            const pointerX = event.pageX - workspaceRect.left - window.scrollX;
+                            // Adjust pointer coords for RTL scrollbar if needed
+                            const pointerX = event.pageX - workspaceRect.left - (document.documentElement.dir === 'rtl' ? 0 : window.scrollX);
                             const pointerY = event.pageY - workspaceRect.top - window.scrollY;
+
                             const dx = pointerX - pivotPoint.x;
                             const dy = pointerY - pivotPoint.y;
-                            let newAngleRad = Math.atan2(dy, dx);
+                            let newAngleRad = Math.atan2(dy, dx); // Angle of vector from pivot to pointer
                             let newAngleDeg = newAngleRad * 180 / Math.PI;
 
-                            // Adjust angle based on handle only if needed for specific rotation behaviour
+                            // Adjust angle based on which end is being dragged
+                            // If dragging 'start' handle (visually right), the pivot is 'end' (visually left)
+                            // The vector points from 'end' to 'start', atan2 gives the strip's angle directly.
+                            // If dragging 'end' handle (visually left), the pivot is 'start' (visually right)
+                            // The vector points from 'start' to 'end', atan2 gives the strip's angle.
+                            // Hmm, wait. The math assumes 0 degrees is along +X axis.
+                            // Let's rethink: We want the strip's rotation property.
+                            // If handle is 'start', vector is end->pointer. Angle needs +180 to be strip rotation.
+                            // If handle is 'end', vector is start->pointer. Angle is the strip rotation.
                             if (handleType === 'start') {
-                                newAngleDeg += 180; // Rotate 180 if dragging start handle relative to end pivot
+                                newAngleDeg += 180;
                             }
 
-                            // Recalculate center based on fixed pivot and new angle
+                            // Calculate new center based on pivot, angle, and length
                             const rad = newAngleDeg * Math.PI / 180;
                             const halfLen = strip.length / 2;
-                            // Vector from pivot to center depends on which end is the pivot
-                            const sign = (handleType === 'end') ? -1 : 1; // If dragging 'end', pivot is 'start'
-                            strip.x = pivotPoint.x + sign * halfLen * Math.cos(rad);
-                            strip.y = pivotPoint.y + sign * halfLen * Math.sin(rad);
+                            // If pivot is 'end', center is offset positively along angle from pivot.
+                            // If pivot is 'start', center is offset negatively along angle from pivot.
+                            const sign = (handleType === 'start') ? 1 : -1; // Pivot is opposite end
+                            const newCenterX = pivotPoint.x + sign * halfLen * Math.cos(rad);
+                            const newCenterY = pivotPoint.y + sign * halfLen * Math.sin(rad);
 
                             strip.setRotation(newAngleDeg);
-                            strip.setPosition(strip.x, strip.y); // Updates transform internally
+                            strip.setPosition(newCenterX, newCenterY); // Updates all visuals
 
+                            // Check for snapping of the end being dragged
                             checkForSnapping(strip, event);
                         }
                     },
                     end(event) {
                         const strip = event.interaction.interactingStrip;
                         activeDragTarget = null;
-                         if (strip) {
+                         // Restore label visibility
+                        document.querySelectorAll('.angle-label, .shape-label').forEach(label => label.style.display = 'block');
+
+                        if (strip) {
                             strip.element.style.zIndex = 10;
                             const didSnap = checkForSnapping(strip, event, true); // Final snap check
 
-                            strip.updateSnapPoints(); // Final update
-                            checkForShapesAndAngles();
-                            // Keep strip selected after manipulation ends
-                            if (findStripById(strip.id)) {
-                                selectStrip(strip); // Ensure it stays selected and info panel updates
-                            } else {
-                                deselectStrip(); // If it got deleted somehow
-                                updateDefaultInfoText();
-                            }
-                         } else {
-                              updateDefaultInfoText();
-                         }
-                         event.interaction.interactingStrip = null;
-                         event.interaction.handleType = null;
-                         event.interaction.pivotPoint = null;
+                            // Update visuals and info after interaction ends
+                             requestAnimationFrame(() => {
+                                if (findStripById(strip.id)){ // Check if exists
+                                     strip.updateSnapPoints();
+                                     checkForShapesAndAngles(); // Recalculate shapes/angles
+                                     if (selectedStripId === strip.id) {
+                                         updateActionButtonsPosition(strip); // Ensure buttons are correct
+                                         stripActionButtons.style.display = 'flex';
+                                         updateDefaultInfoText(); // Update main text
+                                         infoText.textContent = translations.tapWorkspaceToDeselect; // Restore selection text
+                                     }
+                                }
+                            });
+                        } else {
+                            updateDefaultInfoText(); // Restore default text if no strip interacted
+                        }
+                         // Clear interaction state
+                        event.interaction.interactingStrip = null;
+                        event.interaction.handleType = null;
+                        event.interaction.pivotPoint = null;
                     }
                 }
             });
-             // Double tap removed in favor of delete button
 
-        // --- Snapping Logic (Mostly unchanged logic, check validity) ---
+
+        // --- Snapping Logic ---
+         // Logic remains mostly the same, relies on getEndpoints() and connect()
         function checkForSnapping(draggingStrip, event, isDrop = false) {
-             let handleType = event.interaction.handleType;
-             if (event.interaction.newStrip && event.interaction.newStrip.id === draggingStrip.id) {
-                 handleType = 'body';
-             }
-             if (!handleType || !draggingStrip || !draggingStrip.getEndpoints) return false;
+            let handleType = event.interaction.handleType;
+            if (event.interaction.newStrip && event.interaction.newStrip.id === draggingStrip.id) {
+                handleType = 'body';
+            }
+            if (!handleType || !draggingStrip || !draggingStrip.getEndpoints) return false;
 
-             const draggingEndpoints = draggingStrip.getEndpoints();
-             if (!draggingEndpoints || !draggingEndpoints.start || !draggingEndpoints.end) {
-                 console.warn("Skipping snap: Invalid endpoints for ", draggingStrip.id); return false;
-             }
+            const draggingEndpoints = draggingStrip.getEndpoints();
+             if (!draggingEndpoints || !draggingEndpoints.start || !draggingEndpoints.end) { return false; }
 
             let didSnap = false;
             let closestSnap = { distance: SNAP_THRESHOLD + 1, targetStrip: null, targetEnd: null, draggingEnd: null, snapPoint: null };
             const endsToCheck = (handleType === 'body') ? ['start', 'end'] : [handleType];
 
             for (const draggingEndType of endsToCheck) {
-                 if (draggingStrip.connections[draggingEndType] && handleType !== draggingEndType) continue;
-                 const draggingPoint = draggingEndpoints[draggingEndType];
+                if (draggingStrip.connections[draggingEndType] && handleType !== draggingEndType) continue;
+                const draggingPoint = draggingEndpoints[draggingEndType];
                  if (!draggingPoint) continue;
 
-                 for (const targetStrip of stripsOnWorkspace) {
+                for (const targetStrip of stripsOnWorkspace) {
                      if (!targetStrip || targetStrip.id === draggingStrip.id || targetStrip.isSource || !targetStrip.getEndpoints) continue;
-                     const targetEndpoints = targetStrip.getEndpoints();
+                    const targetEndpoints = targetStrip.getEndpoints();
                      if (!targetEndpoints || !targetEndpoints.start || !targetEndpoints.end) continue;
 
-                     for (const targetEndType of ['start', 'end']) {
-                          if (targetStrip.connections[targetEndType]) continue;
-                          const targetPoint = targetEndpoints[targetEndType];
-                          if (!targetPoint) continue;
-                          const distance = getDistance(draggingPoint, targetPoint);
+                    for (const targetEndType of ['start', 'end']) {
+                        if (targetStrip.connections[targetEndType]) continue;
+                        const targetPoint = targetEndpoints[targetEndType];
+                         if (!targetPoint) continue;
+                        const distance = getDistance(draggingPoint, targetPoint);
 
-                          if (distance < SNAP_THRESHOLD && distance < closestSnap.distance) {
-                              closestSnap = { distance: distance, targetStrip: targetStrip, targetEnd: targetEndType, draggingStrip: draggingStrip, draggingEnd: draggingEndType, snapPoint: targetPoint };
-                          }
-                     }
-                 }
-             }
+                        if (distance < SNAP_THRESHOLD && distance < closestSnap.distance) {
+                            closestSnap = { distance: distance, targetStrip: targetStrip, targetEnd: targetEndType, draggingStrip: draggingStrip, draggingEnd: draggingEndType, snapPoint: targetPoint };
+                        }
+                    }
+                }
+            }
 
+            // Perform Snap Adjustment
             if (closestSnap.distance <= SNAP_THRESHOLD) {
-                 didSnap = true;
-                 const { targetStrip, targetEnd, draggingStrip, draggingEnd, snapPoint } = closestSnap;
-                 const currentDraggingPos = draggingStrip.getEndpoints()[draggingEnd]; // Recalculate based on latest state
+                didSnap = true;
+                const { targetStrip, targetEnd, draggingStrip, draggingEnd, snapPoint } = closestSnap;
+                const currentDraggingPos = draggingStrip.getEndpoints()[draggingEnd];
                  if (!currentDraggingPos || !snapPoint) { console.warn("Snap failed: Invalid points."); return false; }
 
-                 const deltaX = snapPoint.x - currentDraggingPos.x;
-                 const deltaY = snapPoint.y - currentDraggingPos.y;
+                const deltaX = snapPoint.x - currentDraggingPos.x;
+                const deltaY = snapPoint.y - currentDraggingPos.y;
 
-                 if (handleType === 'body') {
-                     draggingStrip.setPosition(draggingStrip.x + deltaX, draggingStrip.y + deltaY);
-                 } else {
-                     // Rotation adjustment
-                     const oppositeEndType = draggingEnd === 'start' ? 'end' : 'start';
-                     let pivotPoint = draggingStrip.getEndpoints()[oppositeEndType]; // Recalculate pivot based on current state
+                if (handleType === 'body') {
+                     // Body drag: Translate the whole strip
+                    draggingStrip.setPosition(draggingStrip.x + deltaX, draggingStrip.y + deltaY);
+                } else if (handleType === draggingEnd) {
+                    // Handle drag: Rotate around the *opposite* end
+                    const oppositeEndType = draggingEnd === 'start' ? 'end' : 'start';
+                    let pivotPoint = draggingStrip.getEndpoints()[oppositeEndType];
                      if (!pivotPoint) { console.warn("Snap rotation failed: Invalid pivot."); return false; }
 
-                     const newVectorX = snapPoint.x - pivotPoint.x;
-                     const newVectorY = snapPoint.y - pivotPoint.y;
-                     let newAngleRad = Math.atan2(newVectorY, newVectorX);
-                     let newAngleDeg = newAngleRad * 180 / Math.PI;
-                     if (draggingEnd === 'start') newAngleDeg += 180;
+                    const newVectorX = snapPoint.x - pivotPoint.x;
+                    const newVectorY = snapPoint.y - pivotPoint.y;
+                    let newAngleRad = Math.atan2(newVectorY, newVectorX);
+                    let newAngleDeg = newAngleRad * 180 / Math.PI;
 
-                     const rad = newAngleDeg * Math.PI / 180;
-                     const halfLen = draggingStrip.length / 2;
-                     const sign = (draggingEnd === 'start') ? 1 : -1;
-                     const newCenterX = pivotPoint.x + sign * halfLen * Math.cos(rad);
-                     const newCenterY = pivotPoint.y + sign * halfLen * Math.sin(rad);
+                     // Adjust angle based on which end is the pivot (same logic as move handler)
+                     // If pivot is 'end' (dragging 'start'), angle needs +180
+                     // If pivot is 'start' (dragging 'end'), angle is correct
+                    if (oppositeEndType === 'end') { // Means we were dragging 'start'
+                        newAngleDeg += 180;
+                    }
 
-                     draggingStrip.setRotation(newAngleDeg);
-                     draggingStrip.setPosition(newCenterX, newCenterY);
+                    // Calculate new center position
+                    const rad = newAngleDeg * Math.PI / 180;
+                    const halfLen = draggingStrip.length / 2;
+                     // If pivot is 'start', center is +offset; if pivot is 'end', center is -offset
+                    const sign = (oppositeEndType === 'start') ? 1 : -1;
+                    const newCenterX = pivotPoint.x + sign * halfLen * Math.cos(rad);
+                    const newCenterY = pivotPoint.y + sign * halfLen * Math.sin(rad);
+
+                    draggingStrip.setRotation(newAngleDeg);
+                    draggingStrip.setPosition(newCenterX, newCenterY);
+                } else {
+                     console.warn("Snap logic error: Handle type mismatch."); didSnap = false;
                  }
 
-                 if (isDrop) {
-                     const finalEndpoints = draggingStrip.getEndpoints(); // Get endpoints after adjustment
-                     const finalConnectionPoint = finalEndpoints[draggingEnd];
-                      if (finalConnectionPoint && targetStrip && targetEnd) {
+                // Finalize Connection on Drop
+                if (didSnap && isDrop) {
+                     // Ensure the connection uses the exact final point after adjustment
+                    const finalEndpoints = draggingStrip.getEndpoints();
+                    const finalConnectionPoint = finalEndpoints[draggingEnd];
+                     if (finalConnectionPoint && targetStrip && targetEnd) {
+                        // Perform connection using the precise final point
                          draggingStrip.connect(draggingEnd, targetStrip, targetEnd, finalConnectionPoint);
-                      } else {
-                          console.warn("Connection failed post-snap."); didSnap = false;
-                      }
-                 }
-             }
-             return didSnap;
-         }
+                     } else {
+                         console.warn("Connection failed post-snap - invalid final state.");
+                         didSnap = false;
+                     }
+                }
+            }
+            return didSnap;
+        }
 
-        // --- Angle and Shape Detection (Unchanged logic) ---
+
+        // --- Angle and Shape Detection ---
         function checkForShapesAndAngles() {
             let detectedAngles = [], detectedShapes = [];
             const checkedConnections = new Set();
+
+            document.querySelectorAll('.angle-label, .shape-label').forEach(label => label.remove()); // Clear previous labels
 
             for (const strip1 of stripsOnWorkspace) {
                  if (!strip1) continue;
@@ -796,253 +995,256 @@
                     const conn = strip1.connections[endType1];
                     if (conn && conn.point) {
                         const strip2 = findStripById(conn.stripId);
-                        if (!strip2) continue;
+                         if (!strip2) continue;
                         const key = [strip1.id, strip2.id].sort().join('-');
                         if (checkedConnections.has(key)) continue;
+
                         const angle = getAngleBetweenStrips(strip1, strip2);
                         if (angle !== null) {
-                             let type = '', display = `~${Math.round(angle)}°`;
-                             if (Math.abs(angle - 90) < ANGLE_TOLERANCE) { type = 'Right'; display = '90°'; }
-                             else if (angle > ANGLE_TOLERANCE && angle < (90 - ANGLE_TOLERANCE)) type = 'Acute';
-                             else if (angle > (90 + ANGLE_TOLERANCE) && angle < (180 - ANGLE_TOLERANCE)) type = 'Obtuse';
-                             else if (Math.abs(angle - 180) < ANGLE_TOLERANCE) { type = 'Straight'; display = '180°'; }
+                            let type = '', display = `~${Math.round(angle)}°`;
+                            // Translate angle types
+                            if (Math.abs(angle - 90) < ANGLE_TOLERANCE) { type = translations.rightAngle; display = '90°'; }
+                            else if (angle > ANGLE_TOLERANCE && angle < (90 - ANGLE_TOLERANCE)) type = translations.acuteAngle;
+                            else if (angle > (90 + ANGLE_TOLERANCE) && angle < (180 - ANGLE_TOLERANCE)) type = translations.obtuseAngle;
+                            else if (Math.abs(angle - 180) < ANGLE_TOLERANCE) { type = translations.straightAngle; display = '180°'; }
+                            // Keep common angle approximations numeric for simplicity
+                            else if (Math.abs(angle - 45) < ANGLE_TOLERANCE) display = '~45°';
+                            else if (Math.abs(angle - 60) < ANGLE_TOLERANCE) display = '~60°';
+                            else if (Math.abs(angle - 120) < ANGLE_TOLERANCE) display = '~120°';
+                            else if (Math.abs(angle - 150) < ANGLE_TOLERANCE) display = '~150°';
+                            // Only add translated type if significant (right, acute, obtuse, straight)
+                            if (type) detectedAngles.push(`${type} (${display})`);
+                            else detectedAngles.push(display); // Otherwise just add the numeric display
 
-                             // Add more specific common angles if desired
-                             else if (Math.abs(angle - 45) < ANGLE_TOLERANCE) display = '~45°'; // Complete this line
-                             else if (Math.abs(angle - 60) < ANGLE_TOLERANCE) display = '~60°';
-                             else if (Math.abs(angle - 120) < ANGLE_TOLERANCE) display = '~120°';
-                             else if (Math.abs(angle - 150) < ANGLE_TOLERANCE) display = '~150°';
 
-
-                             if (type) { // Only add if classified (Right, Acute, Obtuse, Straight)
-                                detectedAngles.push(`${type} (${display})`);
-                             } else if (display.startsWith('~')) { // Add approximate angles too if needed
-                                 // Optional: uncomment below to show approximate angles too
-                                 // detectedAngles.push(`Angle (${display})`);
-                             }
+                            const angleLabel = document.createElement('div');
+                            angleLabel.className = 'angle-label';
+                            angleLabel.textContent = display;
+                            const connectionPoint = conn.point;
+                            angleLabel.style.left = `${connectionPoint.x}px`;
+                            angleLabel.style.top = `${connectionPoint.y}px`;
+                            // Offset slightly to avoid overlapping handles/points too much
+                            angleLabel.style.transform = `translate(-50%, -130%)`; // Move slightly up
+                            workspace.appendChild(angleLabel);
                         }
                         checkedConnections.add(key);
                     }
                 }
             }
 
-            // --- Shape Detection (Basic Cycle Finding) ---
-            const visitedStripsInCycles = new Set(); // Track strips already part of a found cycle
+            // Shape Detection Logic
+            const visitedStripsInCycles = new Set();
             const potentialShapes = [];
-
             for (const startStrip of stripsOnWorkspace) {
-                 if (!startStrip || visitedStripsInCycles.has(startStrip.id)) continue; // Skip if invalid or already part of a found shape
-
-                // Try starting a path from each end of the strip, if connected
+                 if (!startStrip || visitedStripsInCycles.has(startStrip.id)) continue;
                 for (const startEnd of ['start', 'end']) {
-                     if (!startStrip.connections[startEnd]) continue; // Must start from a connected end
-
+                    if (!startStrip.connections[startEnd]) continue;
                     const path = findCycle(startStrip, startEnd);
-                    if (path && path.length > 2) { // Need at least 3 strips for a polygon
-                        // Create a canonical ID string from sorted strip IDs in the path
-                         const pathStripIds = path.map(p => p.strip?.id).filter(Boolean).sort().join(','); // Filter null strip at end & sort
+                    if (path && path.length > 2) {
+                        const pathStripIds = path.map(p => p.strip?.id).filter(Boolean).sort().join(',');
                         if (pathStripIds && !potentialShapes.some(s => s.idStr === pathStripIds)) {
-                             potentialShapes.push({ path: path, idStr: pathStripIds });
-                             // Mark all strips in this path as visited to avoid redundant checks
-                             path.forEach(p => {
-                                 if(p.strip) visitedStripsInCycles.add(p.strip.id);
-                             });
+                            potentialShapes.push({ path: path, idStr: pathStripIds });
+                            path.forEach(p => { if (p.strip) visitedStripsInCycles.add(p.strip.id); });
                         }
-                        // Found a cycle starting from this strip/end, break inner loop
-                        // and move to the next unvisited strip
-                        break;
+                        break; // Found a cycle starting from this strip, move to next strip
                     }
                 }
             }
-
-             // --- Classify Found Shapes ---
             potentialShapes.forEach(({ path }) => {
                 const shapeName = classifyPolygon(path);
                 if (shapeName) {
                     detectedShapes.push(shapeName);
+
+                    const shapeLabel = document.createElement('div');
+                    shapeLabel.className = 'shape-label';
+                    shapeLabel.textContent = shapeName;
+                    const center = calculatePolygonCenter(path);
+                    shapeLabel.style.left = `${center.x}px`;
+                    shapeLabel.style.top = `${center.y}px`;
+                     // Center the label visually on the calculated center point
+                     shapeLabel.style.transform = `translate(-50%, -50%)`;
+                    workspace.appendChild(shapeLabel);
                 }
             });
 
-
-            // --- Update Info Panel ---
-            angleInfo.textContent = detectedAngles.length > 0 ? `Angles: ${detectedAngles.join(', ')}` : '';
-            shapeInfo.textContent = detectedShapes.length > 0 ? `Shapes: ${detectedShapes.join(', ')}` : '';
-
-            // Update default info text based on whether shapes/angles are detected
-            // (only if nothing is currently selected)
-             if (!selectedStripId) {
-                updateDefaultInfoText();
-             }
+            // Update Info Panel (Translated)
+            angleInfo.textContent = detectedAngles.length > 0 ? `${translations.anglesPrefix}${detectedAngles.join('، ')}` : '';
+            shapeInfo.textContent = detectedShapes.length > 0 ? `${translations.shapesPrefix}${detectedShapes.join('، ')}` : '';
+            if (!selectedStripId) updateDefaultInfoText();
         }
 
-        // --- Cycle Finding Helper ---
-        function findCycle(startStrip, startEndType) {
-            const path = []; // Stores { strip, entryEnd, exitEnd, connectionPoint }
-            const visitedEdges = new Set(); // Keep track of visited connections (stripId-exitEnd)
+        // Helper function to calculate the center of a polygon (no changes needed)
+        function calculatePolygonCenter(path) {
+            const vertices = path.map(p => p.connectionPoint).filter(Boolean); // Filter out null points if path includes end point
+            if (vertices.length === 0) return { x: 0, y: 0 };
+            const x = vertices.reduce((sum, p) => sum + p.x, 0) / vertices.length;
+            const y = vertices.reduce((sum, p) => sum + p.y, 0) / vertices.length;
+            return { x, y };
+        }
 
-            let currentStrip = startStrip;
-            let currentEntryEnd = startEndType; // Which end we 'entered' the current strip from
 
-            for (let i = 0; i < stripsOnWorkspace.length + 1; i++) { // Limit loop depth
-                // Find the connection point where we entered the current strip
-                const entryConnection = currentStrip.connections[currentEntryEnd];
-                if (!entryConnection || !entryConnection.point) return null; // Path broken
+        // findCycle (no changes needed)
+         function findCycle(startStrip, startEndType) {
+            const path = []; const visitedEdges = new Set();
+            let currentStrip = startStrip; let currentEntryEnd = startEndType;
+             // Limit loop iterations to prevent infinite loops in complex/broken cases
+             for (let i = 0; i < stripsOnWorkspace.length * 2 + 2; i++) { // Increased limit slightly
+                 // Check connection at the end we entered from
+                 const entryConnection = currentStrip.connections[currentEntryEnd];
+                 if (!entryConnection || !entryConnection.point) return null; // Dead end
 
-                // Determine the exit end (the end *not* used for entry)
-                const currentExitEnd = (currentEntryEnd === 'start') ? 'end' : 'start';
-                const exitConnection = currentStrip.connections[currentExitEnd];
+                 const currentExitEnd = (currentEntryEnd === 'start') ? 'end' : 'start'; // Where we will exit
+                 const exitConnection = currentStrip.connections[currentExitEnd]; // Check connection at the exit end
 
-                 // Check if we've traversed this specific edge (strip-exitEnd) before
-                 const edgeKey = `${currentStrip.id}-${currentExitEnd}`;
-                 if (visitedEdges.has(edgeKey)) {
-                     // console.log("Cycle finding stopped: revisiting edge", edgeKey);
-                     return null; // Avoid looping back immediately
-                 }
+                 // Prevent traversing the same strip edge twice in the same direction
+                 const edgeKey = `${currentStrip.id}-${currentExitEnd}`; // Unique key for strip + exit direction
+                 if (visitedEdges.has(edgeKey)) return null; // Loop detected before closing back to start
                  visitedEdges.add(edgeKey);
 
-                // Add the current strip segment to the path
-                path.push({
-                    strip: currentStrip,
-                    entryEnd: currentEntryEnd,
-                    exitEnd: currentExitEnd,
-                    connectionPoint: entryConnection.point // Point where we entered this strip
-                });
+                 // Add current step to path (strip and the point we entered *through*)
+                 path.push({ strip: currentStrip, entryEnd: currentEntryEnd, exitEnd: currentExitEnd, connectionPoint: entryConnection.point });
 
-                // If the exit end is not connected, the path is broken
-                if (!exitConnection || !exitConnection.point) {
-                     // console.log("Cycle finding stopped: dead end at", currentStrip.id, currentExitEnd);
-                     return null;
-                }
+                 // Check if the exit leads back to the starting point
+                 if (exitConnection && exitConnection.point && exitConnection.stripId === startStrip.id && exitConnection.end === startEndType) {
+                    // Found the cycle! Add the final connection point to close the loop visually.
+                     path.push({ strip: null, entryEnd: null, exitEnd: null, connectionPoint: exitConnection.point });
+                     return path; // Return the completed cycle path
+                 }
 
-                // Check if the exit connection leads back to the start strip's *original* entry point
-                if (exitConnection.stripId === startStrip.id && exitConnection.end === startEndType) {
-                    // Cycle found! Add the final connection point
-                     path.push({
-                        strip: null, // Placeholder for the loop closure
-                        entryEnd: null, exitEnd: null,
-                        connectionPoint: exitConnection.point // This is the starting point vertex
-                    });
-                    // console.log("Cycle found:", path.map(p=>p.strip?.id));
-                    return path; // Return the completed path
-                }
+                 // If the exit end is not connected, it's a dead end for cycle finding
+                 if (!exitConnection || !exitConnection.point) return null;
 
-                // Move to the next strip
-                const nextStrip = findStripById(exitConnection.stripId);
-                if (!nextStrip) {
-                    // console.log("Cycle finding stopped: next strip not found", exitConnection.stripId);
-                    return null; // Connection invalid
-                }
+                 // Move to the next strip
+                 const nextStrip = findStripById(exitConnection.stripId);
+                 if (!nextStrip) return null; // Should not happen if connections are consistent
 
-                // Prepare for the next iteration
-                currentStrip = nextStrip;
-                // The end we are entering on the *next* strip is defined by the exitConnection
-                currentEntryEnd = exitConnection.end;
+                 currentStrip = nextStrip;
+                 currentEntryEnd = exitConnection.end; // The end we are entering on the *next* strip
             }
-             // console.log("Cycle finding stopped: path too long");
-            return null; // No cycle found within reasonable length
+            // If loop finishes without returning, likely means no simple cycle or exceeded iteration limit
+             console.warn("Cycle detection timeout or complex structure");
+             return null;
         }
 
-        // --- Polygon Classification ---
+        // classifyPolygon (Translate return strings)
         function classifyPolygon(path) {
-            const numSides = path.length - 1; // Path includes closing point
-            if (numSides < 3) return null;
-
+            const numSides = path.length - 1; if (numSides < 3) return null;
             const sides = []; const angles = [];
-            // Vertices are the connection points stored in the path
             const vertices = path.slice(0, numSides).map(p => p.connectionPoint);
-            if (vertices.some(v => !v)) return null; // Need valid vertices
+            if (vertices.some(v => !v)) return null;
 
             for (let i = 0; i < numSides; i++) {
-                const segment = path[i];
-                if (!segment || !segment.strip) return null; // Invalid path segment
+                const segment = path[i]; if (!segment || !segment.strip) return null;
                 sides.push(segment.strip.length);
-
-                // Calculate interior angle at vertex i
                 const p1 = path[(i + numSides - 1) % numSides].connectionPoint; // Previous vertex
-                const p2 = vertices[i];                                        // Current vertex
-                const p3 = path[(i + 1) % numSides].connectionPoint;         // Next vertex
-
-                if (!p1 || !p2 || !p3) return null; // Need valid points
-                angles.push(calculateAngle(p2, p1, p3));
+                const p2 = vertices[i]; // Current vertex (angle vertex)
+                const p3 = path[(i + 1) % numSides].connectionPoint; // Next vertex
+                 if (!p1 || !p2 || !p3) return null; // Need 3 points to calculate angle
+                 // Ensure we calculate the *internal* angle, might need adjustment based on vertex order
+                 let angle = calculateAngle(p2, p1, p3);
+                 // Simple check for convexity (crude): if an angle is very close to 0 or 360, it might be reflex or miscalculated.
+                 // A better approach involves cross products, but let's assume simple polygons for now.
+                 // If angle > 180 + tolerance, it's likely reflex. For simple classification, we often assume convex.
+                 if (angle > 180 + ANGLE_TOLERANCE) {
+                    // This might indicate a non-simple polygon or winding order issue.
+                    // For now, let's clamp or use the smaller angle 360-angle? Or just skip classification?
+                    // Let's try using the smaller angle:
+                     angle = 360 - angle;
+                }
+                 angles.push(angle);
             }
-
-            // --- Classification Logic ---
+            // Tolerance checks (using global tolerances)
             const sideCheck = (l1, l2) => Math.abs(l1 - l2) / Math.max(l1, l2, 1) < LENGTH_TOLERANCE_RATIO;
             const angleCheck = (a1, a2) => Math.abs(a1 - a2) < ANGLE_TOLERANCE;
             const angleCheck90 = (a) => Math.abs(a - 90) < ANGLE_TOLERANCE;
-            const parallelCheck = (stripA, stripB) => {
-                 if (!stripA || !stripB) return false;
+             // Parallel check needs adjustment for +/- 180 degrees and 0/360 wrap-around
+             const parallelCheck = (stripA, stripB) => {
+                if (!stripA || !stripB) return false;
                  const diff = Math.abs(stripA.rotation - stripB.rotation);
+                 // Normalize difference to be between 0 and 180
                  const effDiff = Math.min(diff, 360 - diff);
+                 // Check if angles are nearly the same (parallel) or nearly 180 apart (antiparallel)
                  return effDiff < PARALLEL_TOLERANCE || Math.abs(effDiff - 180) < PARALLEL_TOLERANCE;
             };
 
             const allSidesEqual = sides.every(len => sideCheck(sides[0], len));
+            const allAnglesEqual = angles.every(ang => angleCheck(angles[0], ang));
             const allAngles90 = angles.every(ang => angleCheck90(ang));
 
             if (numSides === 3) {
-                 // Basic Triangle - could add Equilateral, Isosceles, Scalene, Right checks later
-                 return "Triangle";
-            } else if (numSides === 4) {
+                if (allSidesEqual) return `${translations.triangle} متساوي الأضلاع`; // Equilateral Triangle
+                const uniqueSideLengths = new Set(sides.map(s => Math.round(s/5)*5)).size; // Group similar lengths
+                if (uniqueSideLengths === 2) return `${translations.triangle} متساوي الساقين`; // Isosceles Triangle
+                return translations.triangle; // Scalene Triangle
+            }
+            else if (numSides === 4) {
+                // Use translated names
                 const [s1, s2, s3, s4] = sides; const [a1, a2, a3, a4] = angles;
-                // Get strip references for parallel check
                 const strip1 = path[0]?.strip, strip2 = path[1]?.strip, strip3 = path[2]?.strip, strip4 = path[3]?.strip;
-
                 const oppSides13Equal = sideCheck(s1, s3); const oppSides24Equal = sideCheck(s2, s4);
+                const sides13Parallel = parallelCheck(strip1, strip3); const sides24Parallel = parallelCheck(strip2, strip4);
+
+                if (allAngles90) return allSidesEqual ? translations.square : translations.rectangle;
+                if (allSidesEqual) return (sides13Parallel && sides24Parallel) ? translations.rhombus : translations.quadrilateral; // Rhombus needs parallel sides too
+                if (sides13Parallel && sides24Parallel) return (oppSides13Equal && oppSides24Equal) ? translations.parallelogram : translations.quadrilateral; // Parallelogram needs opposite sides equal too
+
+                // Trapezoid check: exactly one pair of parallel sides
+                const p13 = sides13Parallel; const p24 = sides24Parallel;
+                if ((p13 && !p24) || (!p13 && p24)) return translations.trapezoid;
+
+                // Kite check (crude): two distinct pairs of equal adjacent sides
                 const adjSides12Equal = sideCheck(s1, s2); const adjSides23Equal = sideCheck(s2, s3);
                 const adjSides34Equal = sideCheck(s3, s4); const adjSides41Equal = sideCheck(s4, s1);
-                const oppAngles13Equal = angleCheck(a1, a3); const oppAngles24Equal = angleCheck(a2, a4);
+                const kitePair1 = adjSides12Equal && adjSides34Equal && !sideCheck(s2,s3) && !sideCheck(s4,s1); // 1=2, 3=4, but 2!=3, 4!=1
+                const kitePair2 = adjSides23Equal && adjSides41Equal && !sideCheck(s1,s2) && !sideCheck(s3,s4); // 2=3, 4=1, but 1!=2, 3!=4
+                if (!allSidesEqual && (kitePair1 || kitePair2)) return translations.kite;
 
-                const sides13Parallel = parallelCheck(strip1, strip3);
-                const sides24Parallel = parallelCheck(strip2, strip4);
-
-                // --- Classification order matters ---
-                if (allAngles90) return allSidesEqual ? "Square" : "Rectangle";
-                if (allSidesEqual) return (oppAngles13Equal && oppAngles24Equal && sides13Parallel && sides24Parallel) ? "Rhombus" : "Quadrilateral"; // Needs parallel sides too for Rhombus
-                if (sides13Parallel && sides24Parallel) return (oppSides13Equal && oppSides24Equal && oppAngles13Equal && oppAngles24Equal) ? "Parallelogram" : "Quadrilateral"; // Needs opp sides/angles equal for Parallelogram
-
-                // Kite: Two distinct pairs of *adjacent* equal sides. Check explicitly !allSidesEqual first.
-                const kitePair1 = adjSides12Equal && adjSides34Equal && !adjSides23Equal && !adjSides41Equal;
-                const kitePair2 = adjSides23Equal && adjSides41Equal && !adjSides12Equal && !adjSides34Equal;
-                 if (!allSidesEqual && (kitePair1 || kitePair2)) return "Kite";
-
-                // Trapezoid: *Exactly* one pair of parallel sides
-                if (sides13Parallel !== sides24Parallel) return "Trapezoid"; // XOR condition
-
-                return "Quadrilateral"; // Default 4-sided if nothing else matches
-            } else if (numSides === 5) return "Pentagon";
-            else if (numSides === 6) return "Hexagon";
-            else if (numSides === 7) return "Heptagon";
-            else if (numSides > 7) return `${numSides}-sided Polygon`;
-
-            return null; // Should not be reached
+                return translations.quadrilateral; // Default quadrilateral
+            }
+             // Use translated names for other polygons
+            else if (numSides === 5) return translations.pentagon;
+            else if (numSides === 6) return translations.hexagon;
+            else if (numSides === 7) return translations.heptagon;
+            else if (numSides > 7) return `مضلع ${numSides}${translations.polygonSuffix}`; // e.g., مضلع 8-الأضلاع
+            return null;
         }
+
 
         // --- Initial Setup ---
         function initialize() {
-            console.log("Initializing Geometric Strips Simulator...");
-            // Listener for workspace background taps to deselect
+            console.log("Initializing Geometric Strips Simulator (Arabic)...");
             interact(workspace).on('tap', (event) => {
-                 // Check if the tap target is the workspace itself, not a child strip or info panel
-                 if (event.target === workspace) {
+                 // Prevent deselect if tapping on action buttons or the info panel itself
+                if (event.target === workspace || event.target === document.body) {
+                    if (!stripActionButtons.contains(event.target) && !document.getElementById('info-panel').contains(event.target)) {
+                        deselectStrip();
+                    }
+                } else if (event.target.closest('.strip:not(.strip-source)')) {
+                     // Allow tap on strip (handled by strip's own tap listener)
+                 } else if (!stripActionButtons.contains(event.target) && !document.getElementById('info-panel').contains(event.target)) {
+                     // If tap target is something else in workspace (like a label?), still deselect.
                     deselectStrip();
-                 }
+                }
             });
-
-             // Optional: Recalculate sizes/positions on resize/orientation change
-             window.addEventListener('resize', () => {
-                 stripsOnWorkspace.forEach(strip => {
-                     if (strip && typeof strip.updateSnapPoints === 'function') {
-                         // Update snap points relative to potentially resized elements
+            window.addEventListener('resize', () => {
+                stripsOnWorkspace.forEach(strip => {
+                    if (strip && typeof strip.updateSnapPoints === 'function') {
+                        // Update position slightly in case aspect ratio change affects layout needs
+                         strip.setPosition(strip.x, strip.y);
+                         // Snap points rely on element dimensions which might change implicitly
                          strip.updateSnapPoints();
-                         // May need to update transform if workspace size change affects layout
-                         strip.updateTransform();
-                     }
-                 });
-                 // Also reposition info panel container if needed based on new viewport
-             });
-
-             updateDefaultInfoText(); // Set initial text
+                    }
+                });
+                if (selectedStripId) {
+                    const selectedStrip = findStripById(selectedStripId);
+                    if (selectedStrip) updateActionButtonsPosition(selectedStrip);
+                }
+                 // Re-check shapes/angles in case resize affected calculations (unlikely but safe)
+                checkForShapesAndAngles();
+            });
+            updateDefaultInfoText(); // Set initial info text
+             // Initial check in case strips are preloaded (not currently implemented)
+            checkForShapesAndAngles();
         }
 
         // --- Run Initialization ---
